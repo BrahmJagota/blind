@@ -1,0 +1,3 @@
+interface IsocketProp {
+    socket: Socket
+}
