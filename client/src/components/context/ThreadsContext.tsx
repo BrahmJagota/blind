@@ -1,16 +1,24 @@
 import React, {useState, useContext, createContext, ReactNode} from "react";
 
     interface IThreads {
-        thread: string,
-        setThread: (threads: string) => void,
-        totalThreads: string[],
-        setTotalThreads: (totalThreads: string[]) => void,
+        createRoom: ICreateRoom,
+        // setCreateRoom: (createRoom: ICreateRoom) => void,
+        setCreateRoom: (
+            userInfo: ICreateRoom | ((prevUserInfo: ICreateRoom) => ICreateRoom)
+          ) => void,
+        totalThreads: Ithread[],
+        setTotalThreads: (totalThreads: Ithread[]) => void,
         currentThread: string,
         setCurrentThread: (currentThread: string) => void,
-        addNewThread: (thread: string) => void,
-        handleGetThreads: (threads: string[]) => void,
+        addNewThread: (thread: Ithread) => void,
+        handleGetThreads: (threads: Ithread[]) => void,
     }
 
+   
+    interface Ithread {
+        thread: string,
+        createdBy: string
+    }
 interface props {
     children: ReactNode
 }
@@ -18,18 +26,21 @@ interface props {
 export const ThreadsContext = createContext<IThreads | null>(null);
 
 export const ThreadsContextProvider = ({children}: props) => {
-    const [thread, setThread] = useState<string>("");
-    const [totalThreads, setTotalThreads] = useState<string[]>([]);
+    const [createRoom, setCreateRoom] = useState<ICreateRoom>({
+        roomName: '',
+        roomType: ''
+        });
+    const [totalThreads, setTotalThreads] = useState<Ithread[]>([]);
     const [currentThread, setCurrentThread] = useState<string>('Home');
 
-    const addNewThread = (newThread: string) => {
+    const addNewThread = (newThread: Ithread) => {
     setTotalThreads((prevThreads) => [...prevThreads, newThread]);
     }
-    const handleGetThreads = (newThreads: string[]) => {
+    const handleGetThreads = (newThreads: Ithread[]) => {
         setTotalThreads(newThreads);
     }
     return (
-        <ThreadsContext.Provider value={{ thread, setThread, totalThreads, setTotalThreads, currentThread, setCurrentThread, addNewThread, handleGetThreads }}>
+        <ThreadsContext.Provider value={{ createRoom, setCreateRoom, totalThreads, setTotalThreads, currentThread, setCurrentThread, addNewThread, handleGetThreads }}>
             {children}
         </ThreadsContext.Provider>
     )

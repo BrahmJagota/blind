@@ -8,6 +8,10 @@ interface UserInfo {
   password: string,
   cpassword: string
 }
+interface Idata {
+  success: boolean,
+  message: string
+}
 interface authData {
   success: boolean,
   message: string,
@@ -23,7 +27,7 @@ const Login: React.FC = () => {
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-  const {userInfo, setUserInfo, generatedOtp, setGeneratedOtp} = useUserContext();
+  const {userInfo, setUserInfo, generatedOtp, setGeneratedOtp, setMethod} = useUserContext();
   const handleIsPassShown = () => setIsPasswordShown(!isPasswordShown);
   const navigate = useNavigate();
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +37,7 @@ const Login: React.FC = () => {
       [name]: value,
     }));
   };
+  const handleIsRegister = () => setIsRegistered(!isRegistered)
   const generateOtp = () => {
     fetch('/api/generate-otp', {
       method: "POST",
@@ -61,10 +66,15 @@ if(data.success){
       body: JSON.stringify(userInfo),
       credentials: "include",
     })
-      .then((res) => {
-        res.json();
+      .then((res) => res.json())
+      .then((data: Idata) => {
+        if(data.success){
+          setMethod("LOGIN")
+          navigate('/verify')
+        } else {
+          console.log("message", data.message);
+        }
       })
-      .then((data) => console.log(data))
       .catch((err) => {
         console.log(err);
       });
@@ -82,7 +92,7 @@ if(data.success){
     .then((data: authDataR)=> {
       console.log("register:", data)
       if(data.success){
-        // generateOtp();
+        setMethod("REGISTER")
         navigate('/verify')
       }else {
         console.log("message:", data.message)
@@ -219,7 +229,7 @@ if(data.success){
               </div>
               <small className="text-center mt-4">
                 Don't have an account?{" "}
-                <span className="text-[#191C3B] hover:cursor-pointer">
+                <span className="text-[#191C3B] hover:cursor-pointer" onClick={handleIsRegister}>
                   Register
                 </span>{" "}
                 now

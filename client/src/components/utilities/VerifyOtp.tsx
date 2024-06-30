@@ -7,13 +7,13 @@ import { useNavigate } from 'react-router-dom';
 interface otpProps {
 email: string
 }
-interface dataProps {
+interface Idata {
   success: boolean,
   message: string,
 }
 const VerifyOtp:React.FC<otpProps> = ({email}) => {
   const navigate = useNavigate();
-  const {userInfo, generatedOtp} = useUserContext();
+  const {userInfo, generatedOtp, method} = useUserContext();
   const [message, setMessage] = useState<string>('');
      const [otp, setOtp] = useState<string>('');
      const handleOtpInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,15 +32,21 @@ const VerifyOtp:React.FC<otpProps> = ({email}) => {
      },[otp])
 
      const handleOtp = () => {
+      const data = {
+        email: userInfo.email,
+        password: userInfo.password,
+        otp: otp,
+        method: method
+      }
       fetch('/api/verify-otp', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({email, otp})
+        body: JSON.stringify(data)
       })
       .then((res)=>res.json() )
-      .then((data: dataProps)=> {
+      .then((data: Idata)=> {
         console.log("verify wala", data)
         if(data.success){
           navigate('/')

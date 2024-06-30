@@ -3,8 +3,21 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Modal from "./utilities/Modal";
 import { useThreadContext } from "./context/ThreadsContext";
+import { useUserContext } from "./context/UserContext";
 import Navbar from "./Navbar";
+import { useUtilityContext } from "./context/UtilityContext";
 
+enum RoomType {
+  PUBLIC,
+  PRIVATE,
+  DEFAULT
+}
+interface IRoom {
+  roomName: string,
+  roomType: RoomType,
+  createdBy: string,
+  roomId: string
+}
 interface IData {
   success: boolean,
   message: string[]
@@ -14,19 +27,26 @@ interface Imessage {
   createdBy: string,
   expires: Date
 }
+interface threadData {
+  success: boolean,
+  message: threadInterface
+}
+interface threadInterface {
+  thread: string,
+  createdBy: string
+}
+
 interface Ithread {
   success: boolean,
   message: Imessage[]
 }
 const Home: React.FC<IsocketProp> = ({socket}) => {
-  const { thread, setThread, totalThreads,setTotalThreads ,addNewThread, handleGetThreads, currentThread, setCurrentThread } = useThreadContext();
+  const { createRoom, setCreateRoom, totalThreads,setTotalThreads ,addNewThread, handleGetThreads, currentThread, setCurrentThread } = useThreadContext();
+  const { userId } = useUserContext();
+  const {isProfileModalOpen} = useUtilityContext();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-
-  function getThreadValue(e: React.ChangeEvent<HTMLInputElement>) {
-    setThread(e.target.value);  
-  }
 
   function handleCurrThread (thread: string) {
     setCurrentThread(thread)
@@ -36,33 +56,45 @@ const Home: React.FC<IsocketProp> = ({socket}) => {
       setCurrentThread('Home')
     },[])
     useEffect(()=> {
-      fetch('test')
-      .then((res) => res.json())
-      .then((data) => console.log("dekh", data))
+      fetch('http://localhost:5000/me',{
+        method: "GET",
+         credentials: 'include'
+      })
+      .then((res) => {
+       return res.json()
+      })
+      .then((data: IAuth) => {
+        console.log("rsrsoru", data)
+        if(data.redirect) {
+          navigate('/login')
+        }
+      })
+      .catch((err) => console.log(err))
     },[])
     useEffect(()=> {
-    console.log('fffdf',thread)
-  },[thread])
+    console.log('fffdf',createRoom)
+  },[createRoom])
   function handleCreateThread () {
     setIsModalOpen(true)
   }
-  const addToTotalThreads = (newThread: string) => {
-    addNewThread(newThread);
+  const addToTotalThreads = () => {
     setIsModalOpen(false);
-    setCurrentThread(thread); // being used in the navbar as title
-    fetch('/api/create-thread', {
+    setCurrentThread(createRoom.roomName); // being used in the navbar as title
+    fetch('http://localhost:5000/api/create-room', {
       method: "POST",
+      credentials: 'include',
       headers: {
         "Content-Type": "application/json",
-      },
-      body: JSON.stringify({thread: thread,
-      createdBy: "me"})
+      },  
+      body: JSON.stringify({room: createRoom})
     })
-    .then((res) => res.json())
-    .then((data: IData) => {
+    .then((res) => {
+      return res.json();
+    })
+    .then((data: threadData) => {
       if(data.success){
         console.log("ffll",data)
-        addNewThread(thread)
+        addNewThread(data.message)
         // navigate(`/home/${thread}`)
       } else {
         console.log(data.message)
@@ -73,20 +105,29 @@ const Home: React.FC<IsocketProp> = ({socket}) => {
 
   useEffect(()=> {
     setIsLoading(true);
-    fetch('/api/get-threads')
+    fetch('http://localhost:5000/api/get-rooms',{
+      method: "GET",
+      credentials: 'include'
+    })
     .then((res)=> res.json())
-    .then((data: Ithread) => {
+    .then((data: IRoom[]) => {
       console.log("dataaaa",data) 
-      if(data.success){
-        const newThreads: string[] = data.message.map((item) => item.thread);
-        handleGetThreads(newThreads);
+      if(data){
+        const newThreads: IRoom[] = data.map((item) => item);
+        // handleGetThreads(newThreads);
         setIsLoading(false);
       }
     })
     .catch((err) => console.log(err))
   },[]) 
-  
+  useEffect(()=> {
+    console.log('total thread', totalThreads)
+  },[totalThreads])
   function closeModal () {
+    setCreateRoom({
+      roomName: '',
+      roomType: ''
+    })
     setIsModalOpen(false);
   }
   return (
@@ -94,7 +135,7 @@ const Home: React.FC<IsocketProp> = ({socket}) => {
       <div className="w-screen">
       <Navbar />
       </div>
-        <div className="container">
+        <div className={isProfileModalOpen ? 'blur container' : 'container'}>
       <div id="streams" className="content">
         <Link className="link" to={"/home/btech"} onClick={() => handleCurrThread('B.tech')}>Btech</Link>
         <Link className="link" to={"/home/bba"} onClick={() => handleCurrThread('BBA')}>BBA</Link>
@@ -109,13 +150,13 @@ const Home: React.FC<IsocketProp> = ({socket}) => {
           <div className={isModalOpen ? "blur flex flex-col h-full" : "flex flex-col h-full"}>
           <div className="threads">
             {totalThreads.map((th) => (
-              <Link className="link" to={`/home/${th}`} onClick={() => handleCurrThread(th)}>{th}</Link>
+              <Link className="link" to={`/home/${th}`} onClick={() => handleCurrThread(th.thread)}>{th.thread}</Link>
             ))}
           </div>
             <button className="" onClick={handleCreateThread}>Create thread</button>
             </div>
             {isModalOpen && (
-              <Modal addThread={addToTotalThreads} onClose={closeModal} getThreadValue={getThreadValue}/>
+              <Modal handleCreateRoom={addToTotalThreads} onClose={closeModal}/>
             )}
             </>
         ) : (
@@ -127,13 +168,21 @@ const Home: React.FC<IsocketProp> = ({socket}) => {
             <button onClick={handleCreateThread}>Create thread</button>
             </div>
             {isModalOpen && (
-              <Modal addThread={addToTotalThreads} onClose={closeModal} getThreadValue={getThreadValue} />
+              <Modal handleCreateRoom={addToTotalThreads} onClose={closeModal}  />
             )}
             </>
         )}
       </div>
       <div id="decide" className="content">
-        <p>Not available at this moment</p>
+              {
+                  totalThreads
+                  .filter(th => th.createdBy === userId)
+                  .map((th, index) => (
+                    <Link className="link" to={`/home/${th.thread}`} key={index}>
+                      {th.thread}
+                    </Link>
+                  ))
+              }
       </div>
       </div>
     </div>

@@ -10,7 +10,10 @@ const userSchema = new mongoose.Schema({
 });
 
 const otpSchema = new mongoose.Schema({
-  email: String,
+  email: {
+   type: String,
+   unique: true
+  },
   otp: Number,
   createdAt: {
     type: Date,
@@ -18,8 +21,8 @@ const otpSchema = new mongoose.Schema({
     expires: 60,
   },
 });
-const threadsSchema = new mongoose.Schema({
-  thread: {
+const defaultRoomSchema = new mongoose.Schema({
+  room: {
     type: String,
     required: true,
     unique: true
@@ -34,7 +37,7 @@ const threadsSchema = new mongoose.Schema({
     expires: 24 * 60 * 60,
   }
 })
-threadsSchema.index({ expires: 1 });
+defaultRoomSchema.index({ expires: 1 });
 
 const chatSchema = new mongoose.Schema({
   chat: String,
@@ -43,17 +46,29 @@ const chatSchema = new mongoose.Schema({
 })
 
 const roomsSchema = new mongoose.Schema({
-  room_name: {
+  roomName: {
     type: String,
     required: true
   },
-  user_id: {
-    type: [String],
+  roomId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  roomType: {
+    type: String,
+    enum: ["PUBLIC", "PRIVATE", 'DEFAULT'],
+    required: true,
+  },
+  createdBy: {
+    type: String,
     required: false
   }
 })
+
+
 export const otpModel = mongoose.model('otp', otpSchema);
 export const userModel = mongoose.model('users', userSchema);
-export const threadsModel = mongoose.model('threads', threadsSchema);
+export const threadsModel = mongoose.model('threads', defaultRoomSchema);
 export const chatModel = mongoose.model('chats', chatSchema);
 export const roomModel = mongoose.model('rooms', roomsSchema);

@@ -1,6 +1,7 @@
 import React, { useState, useContext, createContext, ReactNode } from "react";
 
 interface IUserInfo {
+  userId: string;
   email: string;
   password: string;
   cpassword: string;
@@ -15,6 +16,8 @@ interface IuserContext {
   setGeneratedOtp: (otp: number) => void;
   userId: string;
   setUserId: (id: string) => void;
+  method: string,
+  setMethod: (method: string) => void;
 }
 interface props {
   children: ReactNode;
@@ -24,8 +27,10 @@ export const UserContext = createContext<IuserContext | null>(null);
 
 export const UserContextProvider = ({ children }: props) => {
   const [generatedOtp, setGeneratedOtp] = useState<number>(0);
+  const [method, setMethod] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   const [userInfo, setUserInfo] = useState<IUserInfo>({
+    userId: '',
     email: "",
     password: "",
     cpassword: "",
@@ -33,7 +38,7 @@ export const UserContextProvider = ({ children }: props) => {
 
   return (
     <UserContext.Provider
-      value={{ userInfo, setUserInfo, generatedOtp, setGeneratedOtp, userId, setUserId }}
+      value={{ userInfo, setUserInfo, generatedOtp, setGeneratedOtp, userId, setUserId, method, setMethod }}
     >
       {children}
     </UserContext.Provider>

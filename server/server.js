@@ -31,13 +31,23 @@ const io = new Server(server, {
     console.log("connected to socket io");
 
     socket.on('send-chat-to-room',async (data)=> {
-      console.log(data);
-        io.to(data.slug).emit("receive-chat", data);
+      console.log("caht data",data);
+      const toSend = {
+        chat: data.message,
+        sendTo: data.roomId,
+        sendBy: data.sendBy
+      }
+      const result = await chatModel.create(
+        toSend)
+      if(!result) {
+        // emit a function to notify them that chat is not being saved 
+      }
+      io.to(data.roomId).emit("receive-chat", toSend);
     })
     socket.on("room-joined", (room) => {
       socket.leaveAll();
       socket.join(room);
-      console.log("room joined" + room);
+      console.log("room joined", room);
     })
   })
 const PORT =5000;

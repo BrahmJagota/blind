@@ -3,6 +3,9 @@
     "start": "nodemon server.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/free-solid-svg-icons": "^6.5.1",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "bcrypt": "^5.1.1",
     "connect-mongodb-session": "^5.0.0",
     "cookie-parser": "^1.4.6",
@@ -13,6 +16,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
     "mongoose": "^8.1.0",
+    "nanoid": "^5.0.7",
     "nodemailer": "^6.9.8",
     "nodemon": "^3.0.3",
     "otp-generator": "^4.0.1",
